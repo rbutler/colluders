@@ -58,7 +58,16 @@ func main() {
 	}
 	users = calcHeartsperPost(users)
 
-	sort.Sort(models.ByHeartsPerPost(users))
+	strategy := os.Getenv("STRATEGY")
+	switch strategy {
+	case "hearts":
+		sort.Sort(models.ByHearts(users))
+	case "hpp":
+		sort.Sort(models.ByHeartsPerPost(users))
+	default:
+		fmt.Println("Unrecognized strategy, defaulting to Hearts Per Post")
+		sort.Sort(models.ByHeartsPerPost(users))
+	}
 
 	println("")
 	printUsers(users)
