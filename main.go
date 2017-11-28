@@ -56,7 +56,9 @@ func main() {
 	for _, value := range userMap {
 		users = append(users, *value)
 	}
-	sort.Sort(models.ByHearts(users))
+	users = calcHeartsperPost(users)
+
+	sort.Sort(models.ByHeartsPerPost(users))
 
 	println("")
 	printUsers(users)
@@ -121,12 +123,22 @@ func printUsers(users []models.User) {
 	w := new(tabwriter.Writer)
 
 	w.Init(os.Stdout, 12, 8, 0, '\t', 0)
-	fmt.Fprintln(w, "Name\tID\tMessageCount\tHearts Received\tHeartsGiven\t")
-	fmt.Fprintln(w, "----\t--\t------------\t---------------\t-----------\t")
+	fmt.Fprintln(w, "Name\tID\tMessageCount\tHearts Received\tHeartsGiven\tHearts/Post\t")
+	fmt.Fprintln(w, "----\t--\t------------\t---------------\t-----------\t-----------\t")
 
 	for _, u := range users {
-		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t", u.Name, u.ID, u.MessageCount, u.Hearts, u.HeartsGiven))
+		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%.3f\t", u.Name, u.ID, u.MessageCount, u.Hearts, u.HeartsGiven, u.HeartsPerPost))
 	}
 
 	w.Flush()
+}
+
+func calcHeartsperPost(users []models.User) []models.User {
+	updatedUsers := []models.User{}
+	for _, u := range users {
+		u.HeartsPerPost = float64(u.Hearts) / float64(u.MessageCount)
+		updatedUsers = append(updatedUsers, u)
+	}
+
+	return updatedUsers
 }
