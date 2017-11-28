@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"text/tabwriter"
 
 	"github.com/rbutler/colluders/models"
 )
@@ -27,12 +28,12 @@ func main() {
 		for _, _ = range message.FavoritedBy {
 			if userMap[message.UserID] == nil {
 				userMap[message.UserID] = &models.User{
-					ID:    message.UserID,
-					Name:  message.UserName,
-					Count: 1,
+					ID:     message.UserID,
+					Name:   message.UserName,
+					Hearts: 1,
 				}
 			} else {
-				userMap[message.UserID].Count += 1
+				userMap[message.UserID].Hearts += 1
 			}
 		}
 	}
@@ -41,7 +42,7 @@ func main() {
 	for _, value := range userMap {
 		users = append(users, *value)
 	}
-	sort.Sort(models.ByCount(users))
+	sort.Sort(models.ByHearts(users))
 
 	println("")
 	printUsers(users)
@@ -103,7 +104,15 @@ func getMessages(lastID string, limit uint64) (models.MessageResponse, error) {
 }
 
 func printUsers(users []models.User) {
+	w := new(tabwriter.Writer)
+
+	w.Init(os.Stdout, 12, 8, 0, '\t', 0)
+	fmt.Fprintln(w, "Name\tID\tHearts")
+	fmt.Fprintln(w, "----\t--\t------")
+
 	for _, u := range users {
-		fmt.Printf("User %v with ID %v has %v favs\n", u.Name, u.ID, u.Count)
+		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t", u.Name, u.ID, u.Hearts))
 	}
+
+	w.Flush()
 }
