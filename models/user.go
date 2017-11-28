@@ -5,6 +5,7 @@ type User struct {
 	Name         string
 	Hearts       uint64
 	MessageCount uint64
+	HeartsGiven  uint64
 }
 
 type Users map[string]*User

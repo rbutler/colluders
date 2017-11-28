@@ -25,15 +25,28 @@ func main() {
 
 	userMap := make(models.Users)
 	for _, message := range messages {
-		for _, _ = range message.FavoritedBy {
+		for _, favBy := range message.FavoritedBy {
 			if userMap[message.UserID] == nil {
 				userMap[message.UserID] = &models.User{
-					ID:     message.UserID,
-					Name:   message.UserName,
-					Hearts: 1,
+					ID:          message.UserID,
+					Name:        message.UserName,
+					Hearts:      1,
+					HeartsGiven: 0,
 				}
 			} else {
+				userMap[message.UserID].ID = message.UserID
+				userMap[message.UserID].Name = message.UserName
 				userMap[message.UserID].Hearts += 1
+			}
+
+			if userMap[favBy] == nil {
+				userMap[favBy] = &models.User{
+					ID:          favBy,
+					Name:        message.UserName,
+					HeartsGiven: 1,
+				}
+			} else {
+				userMap[favBy].HeartsGiven += 1
 			}
 		}
 	}
@@ -107,11 +120,11 @@ func printUsers(users []models.User) {
 	w := new(tabwriter.Writer)
 
 	w.Init(os.Stdout, 12, 8, 0, '\t', 0)
-	fmt.Fprintln(w, "Name\tID\tHearts")
-	fmt.Fprintln(w, "----\t--\t------")
+	fmt.Fprintln(w, "Name\tID\tMessageCount\tHearts Received\tHeartsGiven\t")
+	fmt.Fprintln(w, "----\t--\t------------\t---------------\t-----------\t")
 
 	for _, u := range users {
-		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t", u.Name, u.ID, u.Hearts))
+		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t", u.Name, u.ID, u.MessageCount, u.Hearts, u.HeartsGiven))
 	}
 
 	w.Flush()
