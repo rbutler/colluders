@@ -25,24 +25,25 @@ func main() {
 
 	userMap := make(models.Users)
 	for _, message := range messages {
-		for _, favBy := range message.FavoritedBy {
-			if userMap[message.UserID] == nil {
-				userMap[message.UserID] = &models.User{
-					ID:          message.UserID,
-					Name:        message.UserName,
-					Hearts:      1,
-					HeartsGiven: 0,
-				}
-			} else {
-				userMap[message.UserID].ID = message.UserID
-				userMap[message.UserID].Name = message.UserName
-				userMap[message.UserID].Hearts += 1
+		if userMap[message.UserID] == nil {
+			userMap[message.UserID] = &models.User{
+				ID:           message.UserID,
+				Name:         message.UserName,
+				Hearts:       0,
+				HeartsGiven:  0,
+				MessageCount: 1,
 			}
+		} else {
+			userMap[message.UserID].MessageCount += 1
+			userMap[message.UserID].Name = message.UserName
+		}
+
+		for _, favBy := range message.FavoritedBy {
+			userMap[message.UserID].Hearts += 1
 
 			if userMap[favBy] == nil {
 				userMap[favBy] = &models.User{
 					ID:          favBy,
-					Name:        message.UserName,
 					HeartsGiven: 1,
 				}
 			} else {
