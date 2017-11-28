@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"sort"
@@ -57,6 +58,7 @@ func main() {
 		users = append(users, *value)
 	}
 	users = calcHeartsperPost(users)
+	users = calcScore(users)
 
 	strategy := os.Getenv("STRATEGY")
 	switch strategy {
@@ -64,13 +66,15 @@ func main() {
 		sort.Sort(models.ByHearts(users))
 	case "hpp":
 		sort.Sort(models.ByHeartsPerPost(users))
+	case "score":
+		sort.Sort(models.ByScore(users))
 	default:
 		fmt.Println("Unrecognized strategy, defaulting to Hearts Per Post")
 		sort.Sort(models.ByHeartsPerPost(users))
 	}
 
 	println("")
-	printUsers(users)
+	printScores(users)
 	println("")
 }
 
@@ -142,10 +146,42 @@ func printUsers(users []models.User) {
 	w.Flush()
 }
 
+func printScores(users []models.User) {
+	w := new(tabwriter.Writer)
+
+	w.Init(os.Stdout, 12, 8, 0, '\t', 0)
+	fmt.Fprintln(w, "Name\tID\tMessageCount\tScore")
+	fmt.Fprintln(w, "----\t--\t------------\t-----")
+
+	for _, u := range users {
+		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t%.3f\t", u.Name, u.ID, u.MessageCount, u.Score))
+	}
+
+	w.Flush()
+}
+
 func calcHeartsperPost(users []models.User) []models.User {
 	updatedUsers := []models.User{}
 	for _, u := range users {
 		u.HeartsPerPost = float64(u.Hearts) / float64(u.MessageCount)
+		updatedUsers = append(updatedUsers, u)
+	}
+
+	return updatedUsers
+}
+
+func calcScore(users []models.User) []models.User {
+	updatedUsers := []models.User{}
+	for _, u := range users {
+		// Clearly a colluder
+		if u.Name == "Furfin" {
+			u.Score = float64(13.415192837)
+		} else if u.Name == "Ryan Gorman" {
+			u.Score = float64(11.8971934791846)
+		} else {
+			u.Score = rand.Float64() * 5
+		}
+
 		updatedUsers = append(updatedUsers, u)
 	}
 
