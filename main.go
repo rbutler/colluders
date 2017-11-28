@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sort"
 
 	"github.com/rbutler/colluders/models"
 )
@@ -21,25 +22,30 @@ func main() {
 		return
 	}
 
-	users := make(models.Users)
+	userMap := make(models.Users)
 	for _, message := range messages {
 		for _, _ = range message.FavoritedBy {
-			if users[message.UserID] == nil {
-				users[message.UserID] = &models.User{
+			if userMap[message.UserID] == nil {
+				userMap[message.UserID] = &models.User{
 					ID:    message.UserID,
 					Name:  message.UserName,
 					Count: 1,
 				}
 			} else {
-				users[message.UserID].Count += 1
+				userMap[message.UserID].Count += 1
 			}
 		}
 	}
 
-	println("done getting favs")
+	users := make([]models.User, 0, len(userMap))
+	for _, value := range userMap {
+		users = append(users, *value)
+	}
+	sort.Sort(models.ByCount(users))
 
-	println("\n\n")
+	println("")
 	printUsers(users)
+	println("")
 }
 
 func getAllMessages() ([]models.Message, error) {
@@ -96,7 +102,7 @@ func getMessages(lastID string, limit uint64) (models.MessageResponse, error) {
 	return *messageResponse, nil
 }
 
-func printUsers(users models.Users) {
+func printUsers(users []models.User) {
 	for _, u := range users {
 		fmt.Printf("User %v with ID %v has %v favs\n", u.Name, u.ID, u.Count)
 	}
