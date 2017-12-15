@@ -57,6 +57,7 @@ func main() {
 		users = append(users, *value)
 	}
 	users = calcHeartsperPost(users)
+	users = calcHeartsRatio(users)
 
 	strategy := os.Getenv("STRATEGY")
 	switch strategy {
@@ -64,6 +65,8 @@ func main() {
 		sort.Sort(models.ByHearts(users))
 	case "hpp":
 		sort.Sort(models.ByHeartsPerPost(users))
+	case "hr":
+		sort.Sort(models.ByHeartsRatio(users))
 	default:
 		fmt.Println("Unrecognized strategy, defaulting to Hearts Per Post")
 		sort.Sort(models.ByHeartsPerPost(users))
@@ -132,11 +135,11 @@ func printUsers(users []models.User) {
 	w := new(tabwriter.Writer)
 
 	w.Init(os.Stdout, 12, 8, 0, '\t', 0)
-	fmt.Fprintln(w, "Name\tID\tMessageCount\tHearts Received\tHeartsGiven\tHearts/Post\t")
-	fmt.Fprintln(w, "----\t--\t------------\t---------------\t-----------\t-----------\t")
+	fmt.Fprintln(w, "Name\tID\tMessageCount\tHearts Received\tHeartsGiven\tHearts/Post\tHeart Received / Given")
+	fmt.Fprintln(w, "----\t--\t------------\t---------------\t-----------\t-----------\t----------------------\t")
 
 	for _, u := range users {
-		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%.3f\t", u.Name, u.ID, u.MessageCount, u.Hearts, u.HeartsGiven, u.HeartsPerPost))
+		fmt.Fprintln(w, fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%.3f\t%.3f\t", u.Name, u.ID, u.MessageCount, u.Hearts, u.HeartsGiven, u.HeartsPerPost, u.HeartsRatio))
 	}
 
 	w.Flush()
@@ -146,6 +149,16 @@ func calcHeartsperPost(users []models.User) []models.User {
 	updatedUsers := []models.User{}
 	for _, u := range users {
 		u.HeartsPerPost = float64(u.Hearts) / float64(u.MessageCount)
+		updatedUsers = append(updatedUsers, u)
+	}
+
+	return updatedUsers
+}
+
+func calcHeartsRatio(users []models.User) []models.User {
+	updatedUsers := []models.User{}
+	for _, u := range users {
+		u.HeartsRatio = float64(u.Hearts) / float64(u.HeartsGiven)
 		updatedUsers = append(updatedUsers, u)
 	}
 
